@@ -107,7 +107,7 @@ impl Default for LinecraftMap {
     fn default() -> Self {
         LinecraftMap {
             tiles: (1..10)
-                    .map(|i| LinecraftTile::random())
+                    .map(|_| LinecraftTile::random())
                     .collect()
         }
     }
@@ -127,7 +127,7 @@ impl CanMutate for LinecraftMap {
         let mut indices = (0..self.tiles.len()).collect::<Vec<_>>();
         indices.shuffle(&mut thread_rng());
 
-        let change_indices = indices[0..count_changes].iter().collect::<Vec<_>>();;
+        let change_indices = indices[0..count_changes].iter().collect::<Vec<_>>();
         for index in change_indices {
             *self.tiles.get_mut(*index).unwrap() = LinecraftTile::random();
         }
@@ -143,7 +143,7 @@ impl CanReproduce<LinecraftMap> for LinecraftMap {
                 (EnemyBase, Empty) | (Empty, EnemyBase) => EnemyBase,
                 (a, b) if thread_rng().gen_bool(0.92) =>
                     if rand::random() { a.clone() } else { b.clone() },
-                (a, b) =>
+                (_, _) =>
                     LinecraftTile::random()
             }
         }

@@ -1,7 +1,6 @@
 
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
 use rand::prelude::*;
-use crate::Creature;
 
 pub type FitnessMeasure = f32;
 

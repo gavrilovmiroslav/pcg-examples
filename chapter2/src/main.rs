@@ -22,7 +22,7 @@ fn run_map_example() {
     ev.print();
 
     let mut solutions = ev.population.iter().enumerate()
-        .map(|(i, m)| (m.clone(), m.evaluate()))
+        .map(|(_, m)| (m.clone(), m.evaluate()))
         .collect::<Vec<_>>();
 
     solutions.sort_by(|(_, e1), (_, e2)| e1.partial_cmp(e2).unwrap());
@@ -32,6 +32,9 @@ fn run_map_example() {
 }
 
 fn main() {
-    //run_creature_example();
+    println!("Creatures example: ");
+    run_creature_example();
+
+    println!("\nLinecraft example: ");
     run_map_example();
 }
