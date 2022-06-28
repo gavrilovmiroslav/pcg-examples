@@ -14,6 +14,8 @@ pub enum LinecraftTile {
     Obstacle,
 }
 
+impl Copy for LinecraftTile {}
+
 impl LinecraftTile {
     pub fn gen(seed: u8) -> LinecraftTile {
         match seed {
@@ -64,20 +66,20 @@ pub struct LinecraftMap {
 // Helpers
 impl LinecraftMap {
     pub fn count_empty(&self) -> usize {
-        self.tiles.iter().filter(|&t| *t == LinecraftTile::Empty).count()
+        self.tiles.iter().filter(|&&t| t == LinecraftTile::Empty).count()
     }
 
     pub fn count_friendly_base(&self) -> usize {
-        self.tiles.iter().filter(|&t| *t == LinecraftTile::FriendlyBase).count()
+        self.tiles.iter().filter(|&&t| t == LinecraftTile::FriendlyBase).count()
     }
 
     pub fn count_enemy_base(&self) -> usize {
-        self.tiles.iter().filter(|&t| *t == LinecraftTile::EnemyBase).count()
+        self.tiles.iter().filter(|&&t| t == LinecraftTile::EnemyBase).count()
     }
 
     pub fn minimal_distance_between_bases(&self) -> usize {
-        let friendly = self.tiles.iter().position(|t| *t == LinecraftTile::FriendlyBase);
-        let enemy = self.tiles.iter().position(|t| *t == LinecraftTile::EnemyBase);
+        let friendly = self.tiles.iter().position(|&t| t == LinecraftTile::FriendlyBase);
+        let enemy = self.tiles.iter().position(|&t| t == LinecraftTile::EnemyBase);
 
         if friendly.is_some() && enemy.is_some() {
             let friendly = friendly.unwrap();
@@ -90,15 +92,14 @@ impl LinecraftMap {
     }
 
     pub fn value_around_base(&self, base: LinecraftTile) -> f32 {
-        let base_at = self.tiles.iter().position(|t| *t == base);
+        let base_at = self.tiles.iter().position(|&t| t == base);
 
-        if base_at.is_some() {
-            let base_at = base_at.unwrap();
+        if let Some(base_index) = base_at {
             self.tiles.iter().enumerate().map(|(index, tile)| {
-                if base_at == index {
+                if base_index == index {
                     0.0
                 } else {
-                    let dist = base_at.abs_diff(index) as f32;
+                    let dist = base_index.abs_diff(index) as f32;
                     tile.resource_value() / dist
                 }
             }).sum()
