@@ -1,4 +1,4 @@
-
+use std::cmp::Ordering;
 use std::fmt::Display;
 use rand::prelude::*;
 
@@ -12,23 +12,15 @@ pub trait CanMutate {
     fn mutate(&mut self);
 }
 
-pub trait CanReproduce {
-    type Partner: CanReproduce;
-    type Child: CanReproduce;
-
-    fn reproduce(&self, partner: &Self::Partner) -> Self::Child;
-}
-
-
 #[derive(Debug)]
-pub struct MuLambdaEvolution<P: Fitness + CanMutate + CanReproduce> {
+pub struct MuLambdaEvolution<P: Fitness + CanMutate> {
     pub generation: i32,
     pub population: Vec<P>,
     pub elite_rate: u32,
     pub reproduction_rate: u32,
 }
 
-impl<P: Fitness + CanMutate + CanReproduce + Default + Clone + Display> MuLambdaEvolution<P> {
+impl<P: Fitness + CanMutate + Default + Clone + Display> MuLambdaEvolution<P> {
     pub fn with_population(mu: u32, lambda: u32) -> Self {
         Self {
             generation: 1,
@@ -67,19 +59,17 @@ impl<P: Fitness + CanMutate + CanReproduce + Default + Clone + Display> MuLambda
 
         // step 4: sort by fitness
         population_with_fitness
-            .sort_by(|(_, fit_left), (_, fit_right)| fit_left.partial_cmp(fit_right).unwrap());
+            .sort_by(|(_, fit_left), (_, fit_right)| fit_right.partial_cmp(fit_left).unwrap_or(Ordering::Equal));
 
         // step 5: remove lambda lowest-scored
-        population_with_fitness
-            .rotate_right(self.reproduction_rate as usize);
         population_with_fitness
             .truncate(self.reproduction_rate as usize);
 
         // step 6: make offspring
         let offspring : Vec<(P, FitnessMeasure)> =
-            (1..self.elite_rate)
-            .map(|i| population_with_fitness.get(i as usize).unwrap().clone())
-            .collect();
+            population_with_fitness.iter()
+                .take(self.elite_rate as usize)
+                .cloned().collect();
 
         // step 7: mutate offspring and add them back into the population
         for (mut member, fitness) in offspring {

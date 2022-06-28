@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use rand::prelude::*;
-use crate::evolution::{CanMutate, CanReproduce, Fitness};
+use crate::evolution::{CanMutate, Fitness};
 
 #[derive(Debug, Clone)]
 pub struct Creature {
@@ -30,19 +30,6 @@ impl CanMutate for Creature {
         self.power += thread_rng().gen_range(-2i8..2i8);
         self.toughness += thread_rng().gen_range(-2i8..2i8);
         self.speed += thread_rng().gen_range(-2i8..2i8);
-    }
-}
-
-impl CanReproduce for Creature {
-    type Partner = Creature;
-    type Child = Creature;
-
-    fn reproduce(&self, partner: &Creature) -> Creature {
-        Creature {
-            power: (self.power + partner.power) / 2,
-            toughness: (self.toughness + partner.toughness) / 2,
-            speed: (self.speed + partner.speed) / 2
-        }
     }
 }
 

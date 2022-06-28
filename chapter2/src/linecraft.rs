@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use rand::{Rng, thread_rng};
 use rand::prelude::SliceRandom;
-use crate::evolution::{CanMutate, CanReproduce, FitnessMeasure};
+use crate::evolution::{CanMutate, FitnessMeasure};
 use crate::Fitness;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -11,7 +11,7 @@ pub enum LinecraftTile {
     Empty,
     Minerals,
     Gas,
-    Swamp,
+    Obstacle,
 }
 
 impl LinecraftTile {
@@ -22,7 +22,7 @@ impl LinecraftTile {
             2..=8 => LinecraftTile::Empty,
             9..=13 => LinecraftTile::Minerals,
             14..=17 => LinecraftTile::Gas,
-            18..=20 => LinecraftTile::Swamp,
+            18..=20 => LinecraftTile::Obstacle,
             _ => LinecraftTile::Empty,
         }
     }
@@ -38,7 +38,7 @@ impl LinecraftTile {
             LinecraftTile::Empty => 1.0,
             LinecraftTile::Minerals => 3.0,
             LinecraftTile::Gas => 3.0,
-            LinecraftTile::Swamp => -1.0,
+            LinecraftTile::Obstacle => -1.0,
         }
     }
 }
@@ -51,7 +51,7 @@ impl Display for LinecraftTile {
             LinecraftTile::Empty => "_",
             LinecraftTile::Minerals => "*",
             LinecraftTile::Gas => "$",
-            LinecraftTile::Swamp => "x",
+            LinecraftTile::Obstacle => "x",
         })
     }
 }
@@ -61,6 +61,7 @@ pub struct LinecraftMap {
     tiles: Vec<LinecraftTile>,
 }
 
+// Helpers
 impl LinecraftMap {
     pub fn count_empty(&self) -> usize {
         self.tiles.iter().filter(|&t| *t == LinecraftTile::Empty).count()
@@ -127,7 +128,7 @@ impl Display for LinecraftMap {
 
 impl CanMutate for LinecraftMap {
     fn mutate(&mut self) {
-        let count_changes = thread_rng().gen_range(0..(self.tiles.len() / 2));
+        let count_changes = thread_rng().gen_range(2..(self.tiles.len() / 2));
         let mut indices = (0..self.tiles.len()).collect::<Vec<_>>();
         indices.shuffle(&mut thread_rng());
 
@@ -138,46 +139,21 @@ impl CanMutate for LinecraftMap {
     }
 }
 
-impl CanReproduce for LinecraftMap {
-    type Partner = LinecraftMap;
-    type Child = LinecraftMap;
-
-    fn reproduce(&self, partner: &LinecraftMap) -> LinecraftMap {
-        fn merge(a: &LinecraftTile, b: &LinecraftTile) -> LinecraftTile {
-            use LinecraftTile::*;
-            match (a, b) {
-                (FriendlyBase, Empty) | (Empty, FriendlyBase) => FriendlyBase,
-                (EnemyBase, Empty) | (Empty, EnemyBase) => EnemyBase,
-                (a, b) if thread_rng().gen_bool(0.92) =>
-                    if rand::random() { a.clone() } else { b.clone() },
-                (_, _) =>
-                    LinecraftTile::random()
-            }
-        }
-
-        LinecraftMap {
-            tiles: self.tiles.iter()
-                .zip(partner.tiles.iter())
-                .map(|(a, b)| merge(a, b))
-                .collect::<Vec<_>>(),
-        }
-    }
-}
-
 impl Fitness for LinecraftMap {
     fn evaluate(&self) -> FitnessMeasure {
         let base_factor = self.count_friendly_base() as f32 * self.count_enemy_base() as f32;
         let base_distance = self.minimal_distance_between_bases() as f32;
-        let empty_value = {
+        let empty_space_value = {
             let count_empty = self.count_empty();
-            if count_empty > self.tiles.len() / 4 && count_empty < self.tiles.len() * 3 / 4 {
+            let len = self.tiles.len();
+            if count_empty > len / 4 && count_empty < len * 3 / 4 {
                 2.0
             } else {
                 0.25
             }
         };
 
-        let similarity = {
+        let resource_fairness = {
             let value_around_friendly = self.value_around_base(LinecraftTile::FriendlyBase);
             let value_around_enemy = self.value_around_base(LinecraftTile::EnemyBase);
 
@@ -193,7 +169,7 @@ impl Fitness for LinecraftMap {
         if base_factor == 0.0 {
             -resource_value
         } else {
-            similarity * base_distance * empty_value * resource_value / (2.0_f32.powf(base_factor))
+            resource_fairness * base_distance * empty_space_value * resource_value / (2.0_f32.powf(base_factor))
         }
     }
 }
