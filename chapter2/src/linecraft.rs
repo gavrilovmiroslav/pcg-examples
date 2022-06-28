@@ -81,11 +81,8 @@ impl LinecraftMap {
         let friendly = self.tiles.iter().position(|&t| t == LinecraftTile::FriendlyBase);
         let enemy = self.tiles.iter().position(|&t| t == LinecraftTile::EnemyBase);
 
-        if friendly.is_some() && enemy.is_some() {
-            let friendly = friendly.unwrap();
-            let enemy = enemy.unwrap();
-
-            friendly.abs_diff(enemy)
+        if let (Some(friend_index), Some(enemy_index)) = (friendly, enemy) {
+            friend_index.abs_diff(enemy_index)
         } else {
             0
         }
