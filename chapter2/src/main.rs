@@ -12,12 +12,12 @@ fn run_creature_example() {
     ev.print();
 }
 
-fn run_map_example() {
+fn run_map_example(mu: u32, lambda: u32) {
     fn map_evaluator(t: i32, map: &LinecraftMap) -> bool {
         t >= 1000 || map.evaluate() > 100.0
     }
 
-    let mut ev = MuLambdaEvolution::<LinecraftMap>::with_population(3, 6);
+    let mut ev = MuLambdaEvolution::<LinecraftMap>::with_population(mu, lambda);
     ev.evolve_until(map_evaluator, true);
     ev.print();
 
@@ -30,7 +30,6 @@ fn run_map_example() {
         solutions.sort_by(|(_, e1), (_, e2)| e1.partial_cmp(e2).unwrap());
         solutions.last().unwrap().clone()
     };
-
     println!("Best map: {} (value = {})", best_map, fitness);
 }
 
@@ -38,6 +37,8 @@ fn main() {
     println!("Creatures example: ");
     run_creature_example();
 
-    println!("\nLinecraft example: ");
-    run_map_example();
+    println!();
+    
+    println!("Linecraft example: ");
+    run_map_example(17, 5);
 }
