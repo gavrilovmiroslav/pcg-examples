@@ -16,8 +16,8 @@ pub trait CanMutate {
 pub struct MuLambdaEvolution<P: Fitness + CanMutate> {
     pub generation: i32,
     pub population: Vec<P>,
-    pub elite_rate: u32,
-    pub reproduction_rate: u32,
+    pub elite_rate: u32,            // MU
+    pub reproduction_rate: u32,     // LAMBDA
 }
 
 impl<P: Fitness + CanMutate + Default + Clone + Display> MuLambdaEvolution<P> {
@@ -59,7 +59,8 @@ impl<P: Fitness + CanMutate + Default + Clone + Display> MuLambdaEvolution<P> {
 
         // step 4: sort by fitness
         population_with_fitness
-            .sort_by(|(_, fit_left), (_, fit_right)| fit_right.partial_cmp(fit_left).unwrap_or(Ordering::Equal));
+            .sort_by(|(_, fit_left), (_, fit_right)|
+                fit_right.partial_cmp(fit_left).unwrap_or(Ordering::Equal));
 
         // step 5: remove lambda lowest-scored
         population_with_fitness

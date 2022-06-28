@@ -127,11 +127,11 @@ impl Display for LinecraftMap {
 impl CanMutate for LinecraftMap {
     fn mutate(&mut self) {
         let count_changes = thread_rng().gen_range(2..(self.tiles.len() / 2));
-        let mut indices = (0..self.tiles.len()).collect::<Vec<_>>();
+
+        let mut indices: Vec<usize> =  (0..self.tiles.len()).collect();
         indices.shuffle(&mut thread_rng());
 
-        let change_indices = indices[0..count_changes].iter().collect::<Vec<_>>();
-        for index in change_indices {
+        for index in indices.iter().take(count_changes) {
             *self.tiles.get_mut(*index).unwrap() = LinecraftTile::random();
         }
     }

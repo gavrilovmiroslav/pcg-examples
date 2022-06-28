@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use crate::creature::Creature;
 use crate::evolution::{Fitness, FitnessMeasure, MuLambdaEvolution};
 use crate::linecraft::LinecraftMap;
@@ -14,23 +15,17 @@ fn run_creature_example() {
 
 fn run_map_example(mu: u32, lambda: u32) {
     fn map_evaluator(t: i32, map: &LinecraftMap) -> bool {
-        t >= 1000 || map.evaluate() > 100.0
+        t >= 1000 || map.evaluate() > 200.0
     }
 
     let mut ev = MuLambdaEvolution::<LinecraftMap>::with_population(mu, lambda);
     ev.evolve_until(map_evaluator, true);
     ev.print();
 
-    let (best_map, fitness) = {
-        let mut solutions: Vec<(LinecraftMap, FitnessMeasure)> =
-            ev.population.iter().enumerate()
-                .map(|(_, m)| (m.clone(), m.evaluate()))
-                .collect();
+    let best_map = ev.population.iter().max_by(|mapa, mapb|
+        mapa.evaluate().partial_cmp(&mapb.evaluate()).unwrap_or(Ordering::Equal)).unwrap();
 
-        solutions.sort_by(|(_, e1), (_, e2)| e1.partial_cmp(e2).unwrap());
-        solutions.last().unwrap().clone()
-    };
-    println!("Best map: {} (value = {})", best_map, fitness);
+    println!("Best map: {} (value = {})", best_map, best_map.evaluate());
 }
 
 fn main() {
@@ -38,7 +33,7 @@ fn main() {
     run_creature_example();
 
     println!();
-    
+
     println!("Linecraft example: ");
     run_map_example(17, 5);
 }

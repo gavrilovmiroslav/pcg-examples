@@ -35,6 +35,6 @@ impl CanMutate for Creature {
 
 impl Fitness for Creature {
     fn evaluate(&self) -> f32 {
-        self.power as f32 * self.toughness as f32 + self.speed as f32 * self.toughness as f32
+        self.power as f32 + self.speed as f32 * self.toughness as f32
     }
 }
