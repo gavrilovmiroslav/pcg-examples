@@ -33,7 +33,10 @@ impl CanMutate for Creature {
     }
 }
 
-impl CanReproduce<Creature> for Creature {
+impl CanReproduce for Creature {
+    type Partner = Creature;
+    type Child = Creature;
+
     fn reproduce(&self, partner: &Creature) -> Creature {
         Creature {
             power: (self.power + partner.power) / 2,

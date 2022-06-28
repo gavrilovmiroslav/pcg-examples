@@ -15,8 +15,8 @@ pub enum LinecraftTile {
 }
 
 impl LinecraftTile {
-    pub fn random() -> LinecraftTile {
-        match thread_rng().gen_range(0..20) {
+    pub fn gen(seed: u8) -> LinecraftTile {
+        match seed {
             0 => LinecraftTile::FriendlyBase,
             1 => LinecraftTile::EnemyBase,
             2..=8 => LinecraftTile::Empty,
@@ -25,6 +25,10 @@ impl LinecraftTile {
             18..=20 => LinecraftTile::Swamp,
             _ => LinecraftTile::Empty,
         }
+    }
+
+    pub fn random() -> LinecraftTile {
+        LinecraftTile::gen(thread_rng().gen_range(0..20))
     }
 
     pub fn resource_value(&self) -> f32 {
@@ -134,7 +138,10 @@ impl CanMutate for LinecraftMap {
     }
 }
 
-impl CanReproduce<LinecraftMap> for LinecraftMap {
+impl CanReproduce for LinecraftMap {
+    type Partner = LinecraftMap;
+    type Child = LinecraftMap;
+
     fn reproduce(&self, partner: &LinecraftMap) -> LinecraftMap {
         fn merge(a: &LinecraftTile, b: &LinecraftTile) -> LinecraftTile {
             use LinecraftTile::*;

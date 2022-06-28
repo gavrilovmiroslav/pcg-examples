@@ -12,20 +12,23 @@ pub trait CanMutate {
     fn mutate(&mut self);
 }
 
-pub trait CanReproduce<P: CanReproduce<P>> {
-    fn reproduce(&self, partner: &P) -> P;
+pub trait CanReproduce {
+    type Partner: CanReproduce;
+    type Child: CanReproduce;
+
+    fn reproduce(&self, partner: &Self::Partner) -> Self::Child;
 }
 
 
 #[derive(Debug)]
-pub struct MuLambdaEvolution<P: Fitness + CanMutate + CanReproduce<P>> {
+pub struct MuLambdaEvolution<P: Fitness + CanMutate + CanReproduce> {
     pub generation: i32,
     pub population: Vec<P>,
     pub elite_rate: u32,
     pub reproduction_rate: u32,
 }
 
-impl<P: Fitness + CanMutate + CanReproduce<P> + Default + Clone + Display> MuLambdaEvolution<P> {
+impl<P: Fitness + CanMutate + CanReproduce + Default + Clone + Display> MuLambdaEvolution<P> {
     pub fn with_population(mu: u32, lambda: u32) -> Self {
         Self {
             generation: 1,
@@ -57,10 +60,10 @@ impl<P: Fitness + CanMutate + CanReproduce<P> + Default + Clone + Display> MuLam
         self.population.shuffle(&mut thread_rng());
 
         // step 3: get fitness for population
-        let mut population_with_fitness =
+        let mut population_with_fitness : Vec<(P, FitnessMeasure)> =
             self.population.iter()
                 .map(|c| (c.clone(), c.evaluate()))
-                .collect::<Vec<(P, FitnessMeasure)>>();
+                .collect();
 
         // step 4: sort by fitness
         population_with_fitness
@@ -73,9 +76,10 @@ impl<P: Fitness + CanMutate + CanReproduce<P> + Default + Clone + Display> MuLam
             .truncate(self.reproduction_rate as usize);
 
         // step 6: make offspring
-        let offspring = (1..self.elite_rate)
+        let offspring : Vec<(P, FitnessMeasure)> =
+            (1..self.elite_rate)
             .map(|i| population_with_fitness.get(i as usize).unwrap().clone())
-            .collect::<Vec<(P, FitnessMeasure)>>();
+            .collect();
 
         // step 7: mutate offspring and add them back into the population
         for (mut member, fitness) in offspring {

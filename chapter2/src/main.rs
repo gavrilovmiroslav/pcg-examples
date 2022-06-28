@@ -1,5 +1,5 @@
 use crate::creature::Creature;
-use crate::evolution::{Fitness, MuLambdaEvolution};
+use crate::evolution::{Fitness, FitnessMeasure, MuLambdaEvolution};
 use crate::linecraft::LinecraftMap;
 
 mod evolution;
@@ -21,14 +21,17 @@ fn run_map_example() {
     ev.evolve_until(map_evaluator, true);
     ev.print();
 
-    let mut solutions = ev.population.iter().enumerate()
-        .map(|(_, m)| (m.clone(), m.evaluate()))
-        .collect::<Vec<_>>();
+    let (best_map, fitness) = {
+        let mut solutions: Vec<(LinecraftMap, FitnessMeasure)> =
+            ev.population.iter().enumerate()
+                .map(|(_, m)| (m.clone(), m.evaluate()))
+                .collect();
 
-    solutions.sort_by(|(_, e1), (_, e2)| e1.partial_cmp(e2).unwrap());
-    if let Some((map, eval)) = solutions.last() {
-        println!("Best map: {} (value = {})", map, eval);
-    }
+        solutions.sort_by(|(_, e1), (_, e2)| e1.partial_cmp(e2).unwrap());
+        solutions.last().unwrap().clone()
+    };
+
+    println!("Best map: {} (value = {})", best_map, fitness);
 }
 
 fn main() {
